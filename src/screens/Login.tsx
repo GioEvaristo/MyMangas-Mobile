@@ -1,3 +1,6 @@
+// Dupla: Gabriel Machado e Giovanna Fonseca
+// Turma: 3º Informática
+
 import React, { useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet, Image, Pressable} from "react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -18,7 +21,7 @@ export default function LoginScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <Image style={{ width: 200, height: 200 }} source={require("../../assets/necologin.webp")}></Image>
+            <Image style={{ width: 360, height: 160 }} source={require("../../assets/myMangas.png")}></Image>
             <Text style={styles.title}>Login</Text>
             <TextInput
                 placeholder="Email"
@@ -34,24 +37,21 @@ export default function LoginScreen({ navigation }) {
                 secureTextEntry //não mostra o que foi digitado
                 style={styles.input}
             />
-            {erro ? <Text style={styles.error}>{erro}</Text> : null}
-            <Pressable style={{borderRadius: 10, padding: 4, marginBottom: 250, justifyContent: 'center', alignItems: 'center', alignContent: 'center', backgroundColor: 'lightgreen'
-                               }} onPress={login}><Text style={{fontSize: 18, fontWeight: 'bold', color: 'white'}}>Entrar</Text></Pressable>
-            <Pressable style={{width: 200, borderRadius: 10, padding: 4, marginBottom: 100, justifyContent: 'center', alignItems: 'center', alignContent: 'center', backgroundColor: 'lightgreen'
-                               }} onPress={() => navigation.navigate("Cadastro")}><Text style={{fontSize: 18, fontWeight: 'bold', color: 'white'}}>CADASTRE-SE</Text></Pressable>
-
+            {erro ? <Text>{erro}</Text> : null}
+            <Pressable style={{borderRadius: 10, padding: 4, marginBottom: 250, justifyContent: 'center', alignItems: 'center', alignContent: 'center', backgroundColor: '#8DA9FF'
+                               }} onPress={login}><Text style={{fontSize: 18, fontWeight: 'bold', color: 'white'}}>ENTRAR</Text></Pressable>
+            <Pressable style={{width: 200, borderRadius: 10, padding: 4, marginBottom: 100, justifyContent: 'center', alignItems: 'center', alignContent: 'center', backgroundColor: '#8DA9FF'
+                               }} onPress={() => navigation.navigate("Cadastro")}><Text style={{fontSize: 15, fontWeight: 'bold', color: 'white'}}>CADASTRE-SE</Text></Pressable>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        justifyContent: "center",
-        padding: 20,
-        backgroundColor: "lightpink"
+    flex: 1,
+    backgroundColor: '#ffad6fff',
+    paddingHorizontal: 16,
     },
-
     title: {
         flex: 0,
         fontSize: 40,
@@ -60,15 +60,11 @@ const styles = StyleSheet.create({
         color: "white"
     },
     input: {
-        backgroundColor: "white",
+        backgroundColor: "#fdfbc0ff",
         borderWidth: 2,
-        borderColor: "lightgreen",
+        borderColor: "#8DA9FF",
         padding: 8,
         marginBottom: 10,
         borderRadius: 15,
-    },
-    error: {
-        color: "red",
-        marginBottom: 10
     },
 });

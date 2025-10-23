@@ -1,178 +1,216 @@
 // Dupla: Gabriel Machado e Giovanna Fonseca
 // Turma: 3º Informática
 
-import { addDoc, collection, deleteDoc, doc, onSnapshot, updateDoc, query, where } from 'firebase/firestore';
 import React, { useState, useEffect } from 'react';
-import { Text, View, TextInput, Pressable, FlatList, Image, StyleSheet } from "react-native";
-import { db, auth } from '../../firebaseConfig';
-import { signOut } from "firebase/auth";
+import {View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, Image} from 'react-native';
+import { auth, db } from '../../firebaseConfig';
+import {onAuthStateChanged, signOut} from 'firebase/auth';
+import {collection, addDoc, updateDoc, deleteDoc, doc, query, where, onSnapshot} from 'firebase/firestore';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function App({ usuario }) { // inserindo usuario de navigation
-    const [livros, setLivros] = useState<any[]>([]);
-    const [novoTexto, setNovoTexto] = useState("");
-    const [novoAutor, setNovoAutor] = useState("");
+export default function Home() {
+  const [mangas, setMangas] = useState([]);
+  const [titulo, setTitulo] = useState('');
+  const [autor, setAutor] = useState('');
+  const [editando, setEditando] = useState(null);
+  const [user, setUser] = useState(null);
 
-    // Leitura em tempo real
-    useEffect(() => {
-        // sabendo qual usuario com uid
-        const user = auth.currentUser;
-        if (!user) {
-            return;
-        }
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return unsubscribe;
+  }, []);
 
-        const q = query(collection(db, "livros"), where("uid", "==", user.uid));
+  useEffect(() => {
+    if (!user) {
+      setMangas([]);
+      return;
+    }
+    const q = query(collection(db, 'livros'), where('userId', '==', user.uid));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const dados = [];
+      querySnapshot.forEach((doc) => {
+        dados.push({ id: doc.id, ...doc.data() });
+      });
+      setMangas(dados);
+    });
+    return unsubscribe;
+  }, [user]);
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const lista: any[] = [];
-            snapshot.forEach((doc) => {
-                lista.push({ id: doc.id, ...doc.data() });
-            });
-            setLivros(lista);
-        });
-        return () => unsubscribe();
-    }, []);
+  const salvarManga = async () => {
+    if (titulo.trim() === '' || autor.trim() === '') {
+      Alert.alert('Erro', 'Para cadastrar um mangá é necessário preencher o título e o autor.');
+      return;
+    }
+    try {
+      if (editando) {
+        const docRef = doc(db, 'livros', editando.id);
+        await updateDoc(docRef, { titulo, autor });
+      } else {
+        await addDoc(collection(db, 'livros'), {titulo, autor, userId: user.uid,});
+      }
+      setTitulo("");
+      setAutor("");
+      setEditando(null);
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível salvar o mangá.');
+    }
+  };
+  const excluirManga = (id: string) => {
+    Alert.alert(
+      'Confirmação de Exclusão',
+      'Deseja mesmo excluir esse belo mangá da sua estante?',
+      [
+        { text: 'Cancelar' },
+        {
+          text: 'Excluir',
+          onPress: async () => {
+            await deleteDoc(doc(db, 'livros', id));},
+          },
+      ]
+    );
+  };
+  const deslogar = () => {
+    signOut(auth);
+  };
+  const iniciarEdicao = (item) => {
+    setTitulo(item.titulo);
+    setAutor(item.autor);
+    setEditando(item);
+  };
 
-    // Criar tarefa
-    const adicionarLivro = async () => {
-        if ((novoTexto.trim() === "") && (novoAutor.trim() === "")) return;
-        try {
-            await addDoc(collection(db, "livros"), {
-                titulo: novoTexto,
-                autor: novoAutor,
-                uid: usuario.uid, // associa usuario vindo da navegacao
-            });
-            setNovoTexto("");
-            setNovoAutor("");
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Image
+          source={require('../../assets/myMangas.png')} 
+          style={styles.logo}
+        />
+      </View>
+      <View style={styles.lista}>
+        <Text style={styles.title}>Título:</Text>
+        <TextInput
+          placeholder="Digite o título do mangá..."
+          style={styles.input}
+          value={titulo}
+          onChangeText={setTitulo}
+        />
+        <Text style={styles.title}>Autor:</Text>
+        <TextInput
+          placeholder="Digite o autor da obra..."
+          style={styles.input}
+          value={autor}
+          onChangeText={setAutor}
+        />
+        <TouchableOpacity style={styles.addButton} onPress={salvarManga}>
+          <Text style={styles.botao}>
+            {editando ? 'Salvar Alterações' : 'Adicionar Mangá'}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-        } catch (error) {
-            console.log("Erro: " + error)
-        }
-
-    };
-
-    // Atualizar tarefa
-    const atualizarLivro = async (id: string) => {
-        const docRef = doc(db, "livros", id);
-        await updateDoc(docRef, { titulo: "Atualizado!" });
-    };
-
-    // Deletar tarefa
-    const deletarLivro = async (id: string) => {
-        const docRef = doc(db, "livros", id);
-        await deleteDoc(docRef);
-    };
-
-    return (
-        <View style={{ flex: 1, padding: 20, backgroundColor: "#f59a50" }}>
-            <Image style={styles.logo} source={require("../../assets/myMangas.png")}></Image>
-            <Text style={{ flex: 0, fontSize: 30, fontWeight: "bold", marginBottom: 20, color: "#4466e5" }}>
-                Estante Virtual
-            </Text>
-            <Text style={styles.titulo}>Título da obra</Text>
-            <TextInput
-                placeholder='Título da obra'
-                value={novoTexto}
-                onChangeText={setNovoTexto}
-                style={{
-                    borderWidth: 1,
-                    padding: 5,
-                    marginBottom: 10,
-                    borderRadius: 5,
-                }}
-            />
-             <Text style={styles.titulo}>Autor da obra</Text>
-            <TextInput
-                placeholder='Autor da obra'
-                value={novoAutor}
-                onChangeText={setNovoAutor}
-                style={{
-                    borderWidth: 1,
-                    padding: 5,
-                    marginBottom: 10,
-                    borderRadius: 5,
-                }}
-            />
-            <Pressable style={{
-                width: 200, borderRadius: 10, padding: 4, marginBottom: 30, justifyContent: 'center', alignItems: 'center', alignContent: 'center', backgroundColor: '#7fa2f3ff'
-            }} onPress={adicionarLivro}><Text style={{ fontSize: 18, fontWeight: 'bold', color: 'white' }}>Adicionar Mangá</Text></Pressable>
-            <FlatList
-                data={livros}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <View style={styles.lista}>
-                        <Image style={{ width: 40, height: 40 }} source={require("../../assets/logomanga.webp")} />
-                        <View style={{ flexDirection: "column" }}>
-                            <Text>Título: {item.titulo}</Text>
-                            <Text>Autor: {item.autor}</Text>
-                        </View>
-
-                        <Pressable onPress={() => atualizarLivro(item.id)}><Image style={{ width: 30, height: 30 }} source={require('../../assets/botao-editar.png')} /></Pressable>
-                        <Pressable onPress={() => deletarLivro(item.id)}><Image style={{ width: 30, height: 30 }} source={require('../../assets/remover-arquivo.png')} /></Pressable>
-                    </View>
-                )}
-            />
-            <Pressable style={{
-                width: 100, borderRadius: 10, padding: 4, marginBottom: 30, justifyContent: 'center', alignItems: 'center', alignContent: 'center', backgroundColor: '#7fa2f3ff'
-            }} onPress={() => signOut(auth)}><Text style={{ fontSize: 18, fontWeight: 'bold', color: 'white' }}>SAIR</Text></Pressable>
-        </View>
-    )
+      <FlatList
+        data={mangas}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <Image source={require('../../assets/logomanga.webp')} style={styles.img}/>
+            <View style={{flex: 1}}>
+              <Text style={styles.cardTitulo}>
+                Título: {item.titulo}
+              </Text>
+              <Text style={styles.cardTitulo}>Autor: {item.autor}</Text>
+            </View>
+            <View style={{flexDirection: "row", gap: 5}}>
+              <TouchableOpacity onPress={() => iniciarEdicao(item)}>
+                <Ionicons name="pencil-outline" size={25} color="#1450c7ff" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => excluirManga(item.id)}>
+                <Ionicons name="trash-outline" size={25} color="#1450c7ff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      />
+      <TouchableOpacity style={styles.botaoSair} onPress={deslogar}>
+        <Text style={styles.textoSair}>SAIR</Text>
+      </TouchableOpacity>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: "moccasin",
+    backgroundColor: '#ffad6fff',
+    paddingHorizontal: 16,
+  },
+  header: {
+    alignItems: 'center',
+    marginVertical: 16,
   },
   logo: {
-    flex: 1,
-    alignContent: "center",
-    justifyContent: "space-evenly",
-    flexDirection: "row",
-    marginTop: 30,
     width: 360,
+    height: 160,
   },
-  titulo: {
+  img: {
+    width: 40,
+    height: 40,
+    marginRight: 10,
+  },
+  title: {
     fontSize: 16,
-    marginTop: 5,
-    color: "white",
+    fontWeight: 'bold',
+    color: '#fff',
   },
   lista: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ffa502",
-    color: "#fff",
+    marginTop: 10,
+    marginBottom: 20,
   },
-  texto: {
-    borderWidth: 2,
-    borderColor: "#FF9A00",
-    padding: 10,
-    marginBottom: 12,
+  input: {
+    backgroundColor: '#fdfbc0ff',
     borderRadius: 10,
-    backgroundColor: "#FFE587",
-    color: 'lightgray',
-    fontWeight: "bold",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    marginBottom: 10,
   },
-  textobotao: {
-    color: 'darkorange',
-    fontWeight: "bold",
-    fontSize: 15,
-  },
-  botaoadicionar: {
-    alignSelf: "center",
-    display: "flex",
-    backgroundColor: "#caeefeff",
+  addButton: {
+    backgroundColor: '#8DA9FF',
     padding: 12,
     borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 15,
-    color: "#FFF",
-    fontWeight: "bold",
-    fontSize: 18,
-    width: 160,
+    alignItems: 'center',
   },
-
+  botao: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  card: {
+    backgroundColor: '#d4ffa7ff',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 10,
+  },
+  cardTitulo: {
+    fontWeight: '300',
+    color: '#000',
+    fontSize: 15,
+  },
+  botaoSair: {
+    backgroundColor: '#8DA9FF',
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginVertical: 16,
+  },
+  textoSair: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 });

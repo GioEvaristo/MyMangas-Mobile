@@ -27,13 +27,14 @@ export default function Navigator() {
     <NavigationContainer>
       <Stack.Navigator>
         {usuario ? (
-          <Stack.Screen name="Home">
+          <Stack.Screen name="Home" options={{title: 'Estante', headerTintColor: "darkorange", headerStyle:{backgroundColor: '#f8f7acff',}}}> 
             {(props) => <HomeScreen {...props} usuario={usuario} />}
           </Stack.Screen>
         ) : (
           <>
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Cadastro" component={CadastroScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} options={{title: 'Login', headerTintColor: "darkorange", headerStyle:{backgroundColor: '#f8f7acff',}}}
+            />
+            <Stack.Screen name="Cadastro" component={CadastroScreen} options={{title: 'Cadastro', headerTintColor: "darkorange", headerStyle:{backgroundColor: '#f8f7acff',}}}/>
           </>
         )}
       </Stack.Navigator>

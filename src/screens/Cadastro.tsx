@@ -1,3 +1,6 @@
+// Dupla: Gabriel Machado e Giovanna Fonseca
+// Turma: 3º Informática
+
 import React, { useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet, Image, Pressable } from "react-native";
 import { createUserWithEmailAndPassword } from "firebase/auth";
@@ -18,7 +21,7 @@ export default function CadastroScreen({ navigation }) {
     };
     return (
         <View style={styles.container}>
-            <Image style={{ width: 200, height: 200 }} source={require("../../assets/necocadastro.gif")}></Image>
+            <Image style={{ width: 360, height: 160 }} source={require("../../assets/myMangas.png")}></Image>
             <Text style={styles.title}>Cadastro</Text>
             <TextInput
                 placeholder="Email"
@@ -36,21 +39,18 @@ export default function CadastroScreen({ navigation }) {
             />
             {erro ? <Text style={styles.error}>{erro}</Text> : null}
             <Pressable style={{
-                borderRadius: 10, padding: 4, marginBottom: 250, justifyContent: 'center', alignItems: 'center', alignContent: 'center', backgroundColor: 'lightgreen'
+                borderRadius: 10, padding: 4, marginBottom: 250, justifyContent: 'center', alignItems: 'center', alignContent: 'center', backgroundColor: '#8DA9FF'
             }} onPress={cadastrar}><Text style={{ fontSize: 18, fontWeight: 'bold', color: 'white' }}>Entrar</Text></Pressable>
-            <Pressable style={{
-                width: 150, borderRadius: 10, padding: 4, marginBottom: 100, justifyContent: 'center', alignItems: 'center', alignContent: 'center', backgroundColor: 'lightgreen'
-            }} onPress={() => navigation.goBack()}><Text style={{ fontSize: 18, fontWeight: 'bold', color: 'white' }}>Voltar ao login</Text></Pressable>
+            
         </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        justifyContent: "center",
-        padding: 20,
-        backgroundColor: "lightpink"
+    flex: 1,
+    backgroundColor: '#ffad6fff',
+    paddingHorizontal: 16,
     },
 
     title: {
@@ -58,12 +58,12 @@ const styles = StyleSheet.create({
         fontSize: 40,
         fontWeight: "bold",
         marginBottom: 20,
-        color: "white"
+        color: "white",
     },
     input: {
-        backgroundColor: "white",
+        backgroundColor: "#fdfbc0ff",
         borderWidth: 2,
-        borderColor: "lightgreen",
+        borderColor: "#8DA9FF",
         padding: 8,
         marginBottom: 10,
         borderRadius: 15,
